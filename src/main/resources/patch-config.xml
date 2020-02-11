@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<patch-config xmlns="urn:jboss:patch-config:1.2">
+    <name>eap-mp-expansion-pack-${expansion.pack.version}</name>
+    <description>EAP MicroProfile Expansion Pack ${expansion.pack.version}</description>
+    <cumulative />
+    <element patch-id="base-layer-eap-microprofile-expansion-pack">
+        <cumulative name="base"/>
+    </element>
+    <element patch-id="microprofile-layer-eap-microprofile-expansion-pack">
+        <cumulative name="microprofile"/>
+    </element>
+    <generate-by-diff />
+</patch-config>
