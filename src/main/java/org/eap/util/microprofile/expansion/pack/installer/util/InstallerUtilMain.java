@@ -37,9 +37,7 @@ public class InstallerUtilMain {
                 layersConfContents.append(token);
 
                 Path layerDir = layersRoot.resolve(token);
-                System.out.println("Checking " + layerDir.toAbsolutePath());
                 if (!Files.exists(layerDir)) {
-                    System.out.println("Creating " + layerDir.toAbsolutePath());
                     Files.createDirectories(layerDir);
                 }
             }
