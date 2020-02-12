@@ -53,6 +53,16 @@
         </resources>
         <plugins>
             <plugin>
+                <!-- Don't install this unless people are creating an installer containing a patch -->
+                <artifactId>maven-install-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-install</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
@@ -92,6 +102,16 @@
             </activation>
             <build>
                 <plugins>
+                    <plugin>
+                        <!-- Install this now since the user is creating an installer containing a patch -->
+                        <artifactId>maven-install-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-install</id>
+                                <phase>install</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-dependency-plugin</artifactId>
