@@ -15,11 +15,7 @@ public class InstallerUtilMain {
         }
         // The unzipped server home will be the only directory inside this one. Rename it to be something known
         // for when the maven plugins pick up again
-        Path unzipFolder = Paths.get(args[0]);
-        Path serverHomeOrig = Files.list(unzipFolder).findFirst().get();
-        Path serverHome = serverHomeOrig.getParent().resolve("eap");
-        Files.move(serverHomeOrig, serverHome);
-
+        Path serverHome = Paths.get(args[0]);
         if (args.length == 2) {
             String allLayers = args[1];
 

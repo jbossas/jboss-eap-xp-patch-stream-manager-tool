@@ -15,10 +15,10 @@
     <packaging>jar</packaging>
     
     <properties>
-        <!-- Base server version (i.e. the low version) for the patch diff -->
-        <version.server.appliesTo>7.3.0.GA-redhat-SNAPSHOT</version.server.appliesTo>
-        <!-- Updated server version (i.e. the higher version) for the patch diff -->
-        <version.server.updated>7.3.0.GA-kabir</version.server.updated>
+        <!-- Base server dist location (i.e. the server to be patched) for the patch diff -->
+        <dist.location.appliesTo>/set/this/path</dist.location.appliesTo>
+        <!-- Updated server dist location (i.e. the server to be patched) for the patch diff -->
+        <dist.location.updated>/set/this/path</dist.location.updated>
         <!-- Expansion pack version 1.0 -->
         <expansion.pack.version>1.0</expansion.pack.version>
         <!-- Layers (comma separated), that need adding to the appliesTo server for the patching to work. -->
@@ -113,46 +113,24 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>unpack-appliesTo</id>
+                                <id>check-servers-exist</id>
                                 <phase>process-resources</phase>
                                 <goals>
-                                    <goal>unpack</goal>
+                                    <goal>enforce</goal>
                                 </goals>
                                 <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.jboss.eap</groupId>
-                                            <artifactId>wildfly-dist</artifactId>
-                                            <version>${version.server.appliesTo}</version>
-                                            <type>zip</type>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/server/appliesTo</outputDirectory>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>unpack-updated</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.jboss.eap</groupId>
-                                            <artifactId>wildfly-dist</artifactId>
-                                            <version>${version.server.updated}</version>
-                                            <type>zip</type>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/server/updated</outputDirectory>
-                                            <destFileName>eap</destFileName>
-                                        </artifactItem>
-                                    </artifactItems>
+                                    <rules>
+                                        <requireFilesExist>
+                                            <message>One or both of the server directory locations specified by -Ddist.location.appliesTo and -Ddist.location.updated do not exist.</message>
+                                            <files>
+                                                <file>${dist.location.appliesTo}</file>
+                                                <file>${dist.location.updated}</file>
+                                            </files>
+                                        </requireFilesExist>
+                                    </rules>
                                 </configuration>
                             </execution>
                         </executions>
@@ -170,7 +148,7 @@
                                 <configuration>
                                     <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerUtilMain</mainClass>
                                     <arguments>
-                                        <argument>${project.build.directory}/server/appliesTo</argument>
+                                        <argument>${dist.location.appliesTo}</argument>
                                         <argument>${added.layers}</argument>
                                     </arguments>
                                 </configuration>
@@ -184,7 +162,7 @@
                                 <configuration>
                                     <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerUtilMain</mainClass>
                                     <arguments>
-                                        <argument>${project.build.directory}/server/updated</argument>
+                                        <argument>${dist.location.updated}</argument>
                                         <argument>${added.layers}</argument>
                                     </arguments>
                                 </configuration>
@@ -204,8 +182,8 @@
                                 </goals>
                                 <configuration>
                                     <!-- InstallerUtilMain which executes above renames the dists to standard names 'eap' directory -->
-                                    <appliesToDist>${project.build.directory}/server/appliesTo/eap</appliesToDist>
-                                    <updatedDist>${project.build.directory}/server/updated/eap</updatedDist>
+                                    <appliesToDist>${dist.location.appliesTo}</appliesToDist>
+                                    <updatedDist>${dist.location.updated}</updatedDist>
                                     <patchConfig>${project.build.outputDirectory}/patch-config.xml</patchConfig>
                                     <outputFile>${project.build.outputDirectory}/patch.zip</outputFile>
                                 </configuration>
