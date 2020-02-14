@@ -148,6 +148,7 @@
                                 <configuration>
                                     <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerUtilMain</mainClass>
                                     <arguments>
+                                        <argument>applies-to</argument>
                                         <argument>${dist.location.appliesTo}</argument>
                                         <argument>${added.layers}</argument>
                                     </arguments>
@@ -162,6 +163,7 @@
                                 <configuration>
                                     <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerUtilMain</mainClass>
                                     <arguments>
+                                        <argument>updated</argument>
                                         <argument>${dist.location.updated}</argument>
                                         <argument>${added.layers}</argument>
                                     </arguments>
