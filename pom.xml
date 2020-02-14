@@ -150,7 +150,7 @@
                                     <arguments>
                                         <argument>applies-to</argument>
                                         <argument>${dist.location.appliesTo}</argument>
-                                        <argument>${added.layers}</argument>
+                                        <argument>--layers=${added.layers}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -165,7 +165,8 @@
                                     <arguments>
                                         <argument>updated</argument>
                                         <argument>${dist.location.updated}</argument>
-                                        <argument>${added.layers}</argument>
+                                        <argument>--layers=${added.layers}</argument>
+                                        <argument>--added-configs=standalone/configuration/standalone-microprofile.xml,standalone/configuration/standalone-microprofile-ha.xml</argument>
                                     </arguments>
                                 </configuration>
                             </execution>

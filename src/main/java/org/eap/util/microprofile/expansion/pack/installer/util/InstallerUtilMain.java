@@ -1,5 +1,6 @@
 package org.eap.util.microprofile.expansion.pack.installer.util;
 
+import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,39 +15,79 @@ import java.util.stream.Collectors;
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
 public class InstallerUtilMain {
+    private static final String USAGE = "Usage: java InstallerUtilMain <id> <path to server> [--layers=<added layers>] [--added-configs=<added configs>]";
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
-            throw new IllegalStateException("Usage: java InstallerUtilMain <id> <path to server> [<added layers>]");
+            throw new IllegalStateException(USAGE);
         }
-        // The unzipped server home will be the only directory inside this one. Rename it to be something known
-        // for when the maven plugins pick up again
+
         String id = args[0];
-        Path serverHome = Paths.get(args[1]);
-        if (args.length == 3) {
-            String allLayers = args[2];
+        Path serverHome = Paths.get(args[1]).toAbsolutePath();
+        if (!Files.exists(serverHome)) {
+            throw new IllegalStateException("Could not find server at " + serverHome);
+        }
+        Path layersRoot = serverHome.resolve("modules/system/layers");
+        if (!Files.exists(serverHome)) {
+            throw new IllegalStateException("Could not find layers root at " + layersRoot);
+        }
 
-            Path layersRoot = serverHome.resolve("modules/system/layers");
-
-            String[] tokens = allLayers.split(",");
-            StringBuilder layersConfContents = new StringBuilder("layers=");
-            boolean first = true;
-            for (String token : tokens) {
-                if (!first) {
-                    layersConfContents.append(",");
+        if (args.length > 2) {
+            for (int i = 2; i < args.length; i++) {
+                if (args[i].startsWith("--layers=")) {
+                    setupLayers(serverHome, layersRoot, args[i].substring("--layers=".length()));
+                } else if (args[i].startsWith("--added-configs=")) {
+                    setupConfigs(serverHome, args[i].substring("--added-configs=".length()));
                 } else {
-                    first = false;
-                }
-                layersConfContents.append(token);
-
-                Path layerDir = layersRoot.resolve(token);
-                if (!Files.exists(layerDir)) {
-                    Files.createDirectories(layerDir);
+                    throw new IllegalStateException("Unknown argument at index " + i + " '" + args[i] + "'\n" + USAGE);
                 }
             }
-            Path layersConf = serverHome.resolve("modules/layers.conf");
-            Files.write(layersConf, layersConfContents.toString().getBytes(StandardCharsets.UTF_8));
-            recordScmRevision(id, layersRoot);
         }
+
+        recordScmRevision(id, layersRoot);
+    }
+
+    private static void setupLayers(Path serverHome, Path layersRoot, String allLayers) throws Exception {
+        String[] tokens = allLayers.split(",");
+        StringBuilder layersConfContents = new StringBuilder("layers=");
+        boolean first = true;
+        for (String token : tokens) {
+            if (!first) {
+                layersConfContents.append(",");
+            } else {
+                first = false;
+            }
+            layersConfContents.append(token);
+
+            Path layerDir = layersRoot.resolve(token);
+            if (!Files.exists(layerDir)) {
+                Files.createDirectories(layerDir);
+            }
+        }
+        Path layersConf = serverHome.resolve("modules/layers.conf");
+        Files.write(layersConf, layersConfContents.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void setupConfigs(Path serverHome, String addedConfigs) throws Exception {
+        Path configsDirectory = Paths.get(InstallerUtilMain.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        configsDirectory = configsDirectory.resolve("added-configs");
+        if (!Files.exists(configsDirectory)) {
+            Files.createDirectories(configsDirectory);
+        }
+
+        String[] tokens = addedConfigs.split(",");
+        for (String token : tokens) {
+            Path dest = configsDirectory.resolve(token.trim());
+            if (!Files.exists(dest.getParent())) {
+                Files.createDirectories(dest.getParent());
+            }
+
+            Path source = serverHome.resolve(token.trim());
+            if (!Files.exists(source)) {
+                throw new IllegalStateException("The config file " + source + " could not be found");
+            }
+            Files.copy(source, dest);
+        }
+
     }
 
     private static void recordScmRevision(String id, Path layersRoot) throws Exception {
