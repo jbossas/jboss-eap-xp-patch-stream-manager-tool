@@ -3,11 +3,20 @@
     <name>eap-mp-expansion-pack-${expansion.pack.version}</name>
     <description>EAP MicroProfile Expansion Pack ${expansion.pack.version}</description>
     <cumulative />
-    <element patch-id="base-layer-eap-microprofile-expansion-pack">
+    <element patch-id="layer-base-jboss-eap-${eap.cp.version}">
         <cumulative name="base"/>
     </element>
-    <element patch-id="microprofile-layer-eap-microprofile-expansion-pack">
+    <element patch-id="microprofile-layer-microprofile-mp-expansion-pack-${expansion.pack.version}">
         <cumulative name="microprofile"/>
     </element>
     <generate-by-diff />
+    <optional-paths>
+        <path value="docs"/>
+        <path value="appclient"/>
+        <path value="bin/appclient.bat" requires="appclient"/>
+        <path value="bin/appclient.conf" requires="appclient"/>
+        <path value="bin/appclient.conf.bat" requires="appclient"/>
+        <path value="bin/appclient.conf.ps1" requires="appclient"/>
+        <path value="bin/appclient.ps1" requires="appclient"/>
+    </optional-paths>
 </patch-config>

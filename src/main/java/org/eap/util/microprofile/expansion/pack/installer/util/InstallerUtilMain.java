@@ -1,12 +1,14 @@
 package org.eap.util.microprofile.expansion.pack.installer.util;
 
-import java.io.File;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -15,7 +17,20 @@ import java.util.stream.Collectors;
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
 public class InstallerUtilMain {
+
+    public static final String APPLIES_TO_DIST = "--applies-to-dist";
+    public static final String CREATE_TEMPLATE = "--create-template";
+    public static final String COMBINE_WITH = "--combine-with";
+    public static final String OUTPUT_FILE = "--output-file";
+    public static final String PATCH_CONFIG = "--patch-config";
+    public static final String UPDATED_DIST = "--updated-dist";
+    public static final String EXPANSION_PACK_VERSION = "--expansion-pack-version";
+
+
     private static final String USAGE = "Usage: java InstallerUtilMain <id> <path to server> [--layers=<added layers>] [--added-configs=<added configs>]";
+
+
+
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
             throw new IllegalStateException(USAGE);
@@ -123,5 +138,153 @@ public class InstallerUtilMain {
 
         throw new IllegalStateException("Was not able to read Scm-Revision from manifest");
 
+    }
+
+    private static InstallerUtilMain parse(String[] args) throws Exception {
+
+        Path patchConfig = null;
+        Path oldFile = null;
+        Path newFile = null;
+        Path patchFile = null;
+        Path combineWith = null;
+        String expansionPackVersion = null;
+
+        Set<String> required = new HashSet<>(Arrays.asList(PATCH_CONFIG, EXPANSION_PACK_VERSION));
+        List<String> patchGenArgs = new ArrayList<>();
+        boolean createTemplate = false;
+        final int argsLength = args.length;
+        for (int i = 0; i < argsLength; i++) {
+            final String arg = args[i];
+            try {
+                if ("--help".equals(arg) || "-h".equals(arg) || "-H".equals(arg)) {
+                    usage();
+                    return null;
+                } else if (arg.startsWith(APPLIES_TO_DIST)) {
+                    patchGenArgs.add(arg);
+                    String val = arg.substring(APPLIES_TO_DIST.length() + 1);
+                    oldFile = Paths.get(val);
+                    if (!Files.exists(oldFile)) {
+                        fileDoesNotExist(arg);
+                        usage();
+                        return null;
+                    } else if (!Files.isDirectory(oldFile)) {
+                        fileIsNotADirectory(arg);
+                        usage();
+                        return null;
+                    }
+                } else if (arg.startsWith(UPDATED_DIST)) {
+                    patchGenArgs.add(arg);
+                    String val = arg.substring(UPDATED_DIST.length() + 1);
+                    newFile = Paths.get(val);
+                    if (!Files.exists(newFile)) {
+                        fileDoesNotExist(arg);
+                        usage();
+                        return null;
+                    } else if (!Files.isDirectory(newFile)) {
+                        fileIsNotADirectory(arg);
+                        usage();
+                        return null;
+                    }
+                } else if (arg.startsWith(PATCH_CONFIG)) {
+                    patchGenArgs.add(arg);
+                    String val = arg.substring(PATCH_CONFIG.length() + 1);
+                    patchConfig = Paths.get(val);
+                    required.remove(PATCH_CONFIG);
+                    if (!Files.exists(patchConfig)) {
+                        fileDoesNotExist(arg);
+                        usage();
+                        return null;
+                    } else if (Files.isDirectory(patchConfig)) {
+                        fileIsADirectory(arg);
+                        usage();
+                        return null;
+                    }
+                } else if (arg.startsWith(OUTPUT_FILE)) {
+                    String val = arg.substring(OUTPUT_FILE.length() + 1);
+                    patchFile = Paths.get(val);
+                    if (Files.exists(patchFile) && Files.isDirectory(patchFile)) {
+                        fileIsADirectory(arg);
+                        usage();
+                        return null;
+                    }
+                } else if (arg.equals(CREATE_TEMPLATE)) {
+                    createTemplate = true;
+                } else if (arg.startsWith(COMBINE_WITH)) {
+                    String val = arg.substring(COMBINE_WITH.length() + 1);
+                    combineWith = Paths.get(val);
+                    if (!Files.exists(combineWith)) {
+                        fileDoesNotExist(arg);
+                        usage();
+                        return null;
+                    }
+                } else if (arg.startsWith(EXPANSION_PACK_VERSION)) {
+                    expansionPackVersion = arg.substring(EXPANSION_PACK_VERSION.length() + 1);
+                    required.remove(EXPANSION_PACK_VERSION);
+                }
+            } catch (IndexOutOfBoundsException e) {
+                argumentExpected(arg);
+                usage();
+                return null;
+            }
+        }
+
+        if (required.size() != 0) {
+            missingRequiredArgs(required);
+            usage();
+            return null;
+        }
+
+        return null; //new PatchGenerator(patchConfig, oldFile, newFile, patchFile, includeVersion, combineWith);
+    }
+
+    private static void missingRequiredArgs(Set<String> set) {
+        System.err.println("Missing required argument(s): " + set);
+    }
+
+    private static void fileIsNotADirectory(String arg) {
+        System.err.println("File at path specified by argument " + arg + " is not a directory");
+    }
+
+    private static void fileIsADirectory(String arg) {
+        System.err.println("File at path specified by argument " + arg + " is a directory");
+    }
+
+    private static void fileDoesNotExist(String arg) {
+        System.err.println("File at path specified by argument " + arg +" does not exist");
+    }
+
+    public static void argumentExpected(String arg) {
+        System.err.println("Argument expected for option " + arg);
+    }
+
+
+
+    private static void usage() {
+
+        Usage usage = new Usage();
+
+        usage.addArguments(APPLIES_TO_DIST + "=<file>");
+        usage.addInstruction("Filesystem path of a pristine unzip of the distribution of the version of the software to which the generated patch applies");
+
+        usage.addArguments("-h", "--help");
+        usage.addInstruction("Display this message and exit");
+
+        usage.addArguments(OUTPUT_FILE + "=<file>");
+        usage.addInstruction("Filesystem location to which the generated patch file should be written");
+
+        usage.addArguments(PATCH_CONFIG + "=<file>");
+        usage.addInstruction("Filesystem path of the patch generation configuration file to use");
+
+        usage.addArguments(UPDATED_DIST + "=<file>");
+        usage.addInstruction("Filesystem path of a pristine unzip of a distribution of software which contains the changes that should be incorporated in the patch");
+
+        usage.addArguments("-v", "--version");
+        usage.addInstruction("Print version and exit");
+
+        usage.addArguments(COMBINE_WITH + "=<file>");
+        usage.addInstruction("Filesystem path of the previous CP to be included into the same package with the newly generated one");
+
+        String headline = usage.getDefaultUsageHeadline("eap-mp-expansion-pack-installer-gen");
+        System.out.print(usage.usage(headline));
     }
 }
