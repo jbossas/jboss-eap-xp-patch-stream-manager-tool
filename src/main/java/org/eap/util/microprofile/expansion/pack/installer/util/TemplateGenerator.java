@@ -24,18 +24,16 @@ public class TemplateGenerator {
     private static final String HELP = "--help";
 
     private final String patchID;
-    private final String eapCpVersion;
     private final String mpXpVersion;
 
-    public TemplateGenerator(String patchID, String eapCpVersion, String mpXpVersion) {
+    public TemplateGenerator(String patchID, String mpXpVersion) {
         this.patchID = patchID;
-        this.eapCpVersion = eapCpVersion;
         this.mpXpVersion = mpXpVersion;
     }
 
     static void generate(final String... args) throws Exception{
 
-        String patchID = UUID.randomUUID().toString();
+        String patchID = "mp-xp-";
         String eapCpVersion = null;
         String mpXpVersion = null;
         final int argsLength = args.length;
@@ -46,9 +44,8 @@ public class TemplateGenerator {
                     usage();
                     return;
                 } else if (arg.equals(CREATE_TEMPLATE)) {
-                    patchID = args[++i];
-                    eapCpVersion = args[++i];
                     mpXpVersion = args[++i];
+                    patchID += mpXpVersion;
                     continue;
                 } else {
                     System.err.println(PatchGenLogger.argumentExpected(arg));
@@ -62,13 +59,13 @@ public class TemplateGenerator {
             }
         }
 
-        TemplateGenerator templateGenerator = new TemplateGenerator(patchID, eapCpVersion, mpXpVersion);
+        TemplateGenerator templateGenerator = new TemplateGenerator(patchID, mpXpVersion);
         templateGenerator.createPatchConfigXml();
     }
 
     static void usage() {
         System.err.println("USAGE:");
-        System.err.println("patch-gen.sh --create-template <patch-id> <eap-cp-version> <microprofile-expansion-pack-version>");
+        System.err.println("patch-gen.sh --create-template <microprofile-expansion-pack-version>");
         System.err.println();
         System.err.println("this will create a patch-config-[patch-id].xml adjusted for the EAP CP and MP Expansion Pack versions");
     }
@@ -85,6 +82,7 @@ public class TemplateGenerator {
         }
 
         File file = new File(url.toURI());
+        String contents = null;
         try (ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(file)))) {
             ZipEntry entry = zin.getNextEntry();
             while (entry != null)
@@ -93,23 +91,25 @@ public class TemplateGenerator {
                         continue;
                     }
                     if (entry.getName().equals("patch-config.xml")) {
-                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(zin))) {
-                            StringBuffer sb = new StringBuffer();
-                            String line = reader.readLine();
-                            while (line != null) {
-                                line = line.replace("${expansion.pack.version}", mpXpVersion);
-                                line = line.replace("${eap.cp.version}", eapCpVersion);
-                                sb.append(line);
-                                line = reader.readLine();
-                            }
-                            return sb.toString();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(zin));
+                        StringBuffer sb = new StringBuffer();
+                        String line = reader.readLine();
+                        while (line != null) {
+                            line = line.replace("${expansion.pack.version}", mpXpVersion);
+                            sb.append(line);
+                            sb.append("\n");
+                            line = reader.readLine();
                         }
+                        contents = sb.toString();
                     }
                 } finally {
                     zin.closeEntry();
                     entry = zin.getNextEntry();
                 }
-            }
-        throw new IllegalStateException("Could not find patch-config.xml in  " + Paths.get(url.toURI()));
+        }
+        if (contents == null) {
+            throw new IllegalStateException("Could not find patch-config.xml");
+        }
+        return contents;
     }
 }

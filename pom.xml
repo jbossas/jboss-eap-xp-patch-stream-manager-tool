@@ -19,60 +19,42 @@
         <dist.location.appliesTo>/set/this/path</dist.location.appliesTo>
         <!-- Updated server dist location (i.e. the server to be patched) for the patch diff -->
         <dist.location.updated>/set/this/path</dist.location.updated>
-        <!-- Expansion pack version 1.0 -->
+        <!-- Patch to combine with -->
+        <patch.combine.with></patch.combine.with>
+        <!-- Expansion pack version -->
         <expansion.pack.version>1.0</expansion.pack.version>
         <!-- Layers (comma separated), that need adding to the appliesTo server for the patching to work. -->
         <added.layers>microprofile</added.layers>
 
         <!--Tooling versions -->
         <version.org.jboss.as.patch-gen>2.0.1.Final</version.org.jboss.as.patch-gen>
-        <version.org.wildfly.core>11.0.0.Beta8</version.org.wildfly.core>
+        <version.org.eap.util.mp.installer.core>1.0.0-SNAPSHOT</version.org.eap.util.mp.installer.core>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.wildfly.core</groupId>
-                <artifactId>wildfly-core-component-matrix</artifactId>
-                <version>${version.org.wildfly.core}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>patch-gen</artifactId>
                 <version>${version.org.jboss.as.patch-gen}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.eap.util</groupId>
+                <artifactId>microprofile-expansion-pack-installer-core</artifactId>
+                <version>${version.org.eap.util.mp.installer.core}</version>
+                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-
         <dependency>
             <groupId>org.jboss.as</groupId>
             <artifactId>patch-gen</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wildfly.common</groupId>
-            <artifactId>wildfly-common</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-embedded</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logmanager</groupId>
-            <artifactId>jboss-logmanager</artifactId>
+            <groupId>org.jboss.eap.util</groupId>
+            <artifactId>microprofile-expansion-pack-installer-core</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -83,23 +65,7 @@
     </dependencies>
 
     <build>
-<!--        <resources>-->
-<!--            <resource>-->
-<!--                <directory>src/main/resources</directory>-->
-<!--                <filtering>true</filtering>-->
-<!--            </resource>-->
-<!--        </resources>-->
         <plugins>
-            <plugin>
-                <!-- Don't install this unless people are creating an installer containing a patch -->
-                <artifactId>maven-install-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-install</id>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
@@ -113,12 +79,9 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        org.eap.util.microprofile.expansion.pack.installer.InstallerMain
+                                        org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain
                                     </mainClass>
                                 </manifest>
-                                <manifestEntries>
-                                    <server-target-layers>${added.layers}</server-target-layers>
-                                </manifestEntries>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -140,43 +103,12 @@
             </activation>
             <build>
                 <plugins>
-                    <plugin>
-                        <!-- Install this now since the user is creating an installer containing a patch -->
-                        <artifactId>maven-install-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>default-install</id>
-                                <phase>install</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-enforcer-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>check-servers-exist</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <configuration>
-                                    <rules>
-                                        <requireFilesExist>
-                                            <message>One or both of the server directory locations specified by -Ddist.location.appliesTo and -Ddist.location.updated do not exist.</message>
-                                            <files>
-                                                <file>${dist.location.appliesTo}</file>
-                                                <file>${dist.location.updated}</file>
-                                            </files>
-                                        </requireFilesExist>
-                                    </rules>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
+
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
                         <executions>
+                            <!--
                             <execution>
                                 <id>adjust-applies-to</id>
                                 <goals>
@@ -184,11 +116,11 @@
                                 </goals>
                                 <phase>process-classes</phase>
                                 <configuration>
-                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerUtilMain</mainClass>
+                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
                                     <arguments>
                                         <argument>applies-to</argument>
                                         <argument>${dist.location.appliesTo}</argument>
-                                        <argument>--layers=${added.layers}</argument>
+                                        <argument>- -layers=${added.layers}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -199,10 +131,29 @@
                                 </goals>
                                 <phase>process-classes</phase>
                                 <configuration>
-                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerUtilMain</mainClass>
+                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
                                     <arguments>
                                         <argument>updated</argument>
                                         <argument>${dist.location.updated}</argument>
+                                        <argument>- -layers=${added.layers}</argument>
+                                        <argument>- -added-configs=standalone/configuration/standalone-microprofile.xml,standalone/configuration/standalone-microprofile-ha.xml</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            -->
+                            <execution>
+                                <id>run-installer-creator</id>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <phase>process-classes</phase>
+                                <configuration>
+                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
+                                    <arguments>
+                                        <argument>--applies-to-dist=${dist.location.appliesTo}</argument>
+                                        <argument>--updated-dist=${dist.location.updated}</argument>
+                                        <!-- is this one a bit weird; could it be more automatic? -->
+                                        <argument>--patch-config=XXXX</argument>
                                         <argument>--layers=${added.layers}</argument>
                                         <argument>--added-configs=standalone/configuration/standalone-microprofile.xml,standalone/configuration/standalone-microprofile-ha.xml</argument>
                                     </arguments>
@@ -210,6 +161,7 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!--
                     <plugin>
                         <groupId>org.jboss.as</groupId>
                         <artifactId>patch-gen-maven-plugin</artifactId>
@@ -222,15 +174,16 @@
                                     <goal>generate-patch</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- InstallerUtilMain which executes above renames the dists to standard names 'eap' directory -->
                                     <appliesToDist>${dist.location.appliesTo}</appliesToDist>
                                     <updatedDist>${dist.location.updated}</updatedDist>
                                     <patchConfig>${project.build.outputDirectory}/patch-config.xml</patchConfig>
                                     <outputFile>${project.build.outputDirectory}/patch.zip</outputFile>
+                                    <combineWith>${patch.combine.with}</combineWith>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
+                    -->
                 </plugins>
             </build>
         </profile>

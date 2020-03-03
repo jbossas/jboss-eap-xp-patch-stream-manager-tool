@@ -3,10 +3,10 @@
     <name>eap-mp-expansion-pack-${expansion.pack.version}</name>
     <description>EAP MicroProfile Expansion Pack ${expansion.pack.version}</description>
     <cumulative />
-    <element patch-id="layer-base-jboss-eap-${eap.cp.version}">
+    <element patch-id="layer-base-jboss-eap-mp-xp-${expansion.pack.version}">
         <cumulative name="base"/>
     </element>
-    <element patch-id="microprofile-layer-microprofile-mp-expansion-pack-${expansion.pack.version}">
+    <element patch-id="layer-microprofile-jboss-eap-mp-xp-${expansion.pack.version}">
         <cumulative name="microprofile"/>
     </element>
     <generate-by-diff />
