@@ -1,4 +1,4 @@
-package org.eap.util.microprofile.expansion.pack.installer.util;
+package org.jboss.eap.util.microprofile.expansion.pack.installer.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

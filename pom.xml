@@ -79,7 +79,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain
+                                        org.jboss.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain
                                     </mainClass>
                                 </manifest>
                             </archive>
@@ -148,7 +148,7 @@
                                 </goals>
                                 <phase>process-classes</phase>
                                 <configuration>
-                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
+                                    <mainClass>org.jboss.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
                                     <arguments>
                                         <argument>--applies-to-dist=${dist.location.appliesTo}</argument>
                                         <argument>--updated-dist=${dist.location.updated}</argument>
