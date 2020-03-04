@@ -10,11 +10,18 @@
     </parent>
 
     <groupId>org.jboss.eap.util</groupId>
-    <artifactId>microprofile-expansion-pack-installer</artifactId>
+    <artifactId>eap-mp-xp-installer-tool</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <properties>
+        <!--Tooling versions -->
+        <version.org.jboss.as.patch-gen>2.0.1.Final</version.org.jboss.as.patch-gen>
+        <version.org.eap.util.mp.xp.installer.core>1.0.0-SNAPSHOT</version.org.eap.util.mp.xp.installer.core>
+
+        <!--
+            These are only needed if running the tool from Maven
+        -->
         <!-- Base server dist location (i.e. the server to be patched) for the patch diff -->
         <dist.location.appliesTo>/set/this/path</dist.location.appliesTo>
         <!-- Updated server dist location (i.e. the server to be patched) for the patch diff -->
@@ -26,9 +33,6 @@
         <!-- Layers (comma separated), that need adding to the appliesTo server for the patching to work. -->
         <added.layers>microprofile</added.layers>
 
-        <!--Tooling versions -->
-        <version.org.jboss.as.patch-gen>2.0.1.Final</version.org.jboss.as.patch-gen>
-        <version.org.eap.util.mp.installer.core>1.0.0-SNAPSHOT</version.org.eap.util.mp.installer.core>
     </properties>
 
     <dependencyManagement>
@@ -40,8 +44,8 @@
             </dependency>
             <dependency>
                 <groupId>org.jboss.eap.util</groupId>
-                <artifactId>microprofile-expansion-pack-installer-core</artifactId>
-                <version>${version.org.eap.util.mp.installer.core}</version>
+                <artifactId>eap-mp-xp-installer-core</artifactId>
+                <version>${version.org.eap.util.mp.xp.installer.core}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
@@ -54,7 +58,7 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.eap.util</groupId>
-            <artifactId>microprofile-expansion-pack-installer-core</artifactId>
+            <artifactId>eap-mp-xp-installer-core</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -108,39 +112,6 @@
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
                         <executions>
-                            <!--
-                            <execution>
-                                <id>adjust-applies-to</id>
-                                <goals>
-                                    <goal>java</goal>
-                                </goals>
-                                <phase>process-classes</phase>
-                                <configuration>
-                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
-                                    <arguments>
-                                        <argument>applies-to</argument>
-                                        <argument>${dist.location.appliesTo}</argument>
-                                        <argument>- -layers=${added.layers}</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>adjust-updated</id>
-                                <goals>
-                                    <goal>java</goal>
-                                </goals>
-                                <phase>process-classes</phase>
-                                <configuration>
-                                    <mainClass>org.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
-                                    <arguments>
-                                        <argument>updated</argument>
-                                        <argument>${dist.location.updated}</argument>
-                                        <argument>- -layers=${added.layers}</argument>
-                                        <argument>- -added-configs=standalone/configuration/standalone-microprofile.xml,standalone/configuration/standalone-microprofile-ha.xml</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                            -->
                             <execution>
                                 <id>run-installer-creator</id>
                                 <goals>
@@ -161,29 +132,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <!--
-                    <plugin>
-                        <groupId>org.jboss.as</groupId>
-                        <artifactId>patch-gen-maven-plugin</artifactId>
-                        <version>${version.org.jboss.as.patch-gen}</version>
-                        <executions>
-                            <execution>
-                                <id>create-patch-file</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>generate-patch</goal>
-                                </goals>
-                                <configuration>
-                                    <appliesToDist>${dist.location.appliesTo}</appliesToDist>
-                                    <updatedDist>${dist.location.updated}</updatedDist>
-                                    <patchConfig>${project.build.outputDirectory}/patch-config.xml</patchConfig>
-                                    <outputFile>${project.build.outputDirectory}/patch.zip</outputFile>
-                                    <combineWith>${patch.combine.with}</combineWith>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    -->
                 </plugins>
             </build>
         </profile>
