@@ -51,7 +51,7 @@ class TemplateGenerator {
         this.outputDir = outputDir;
     }
 
-    static void generate(final String... args) throws Exception{
+    static Path generate(final String... args) throws Exception{
 
         String patchID = "mp-xp-";
         String outputDir = null;
@@ -61,7 +61,7 @@ class TemplateGenerator {
             try {
                 if (HELP.equals(arg) || H.equalsIgnoreCase(arg)) {
                     usage();
-                    return;
+                    System.exit(1);
                 } else if (arg.equals(CREATE_TEMPLATE)) {
                     mpXpVersion = args[++i];
                     patchID += mpXpVersion;
@@ -72,17 +72,17 @@ class TemplateGenerator {
                 } else {
                     System.err.println(PatchGenLogger.argumentExpected(arg));
                     usage();
-                    return;
+                    System.exit(1);
                 }
             } catch (IndexOutOfBoundsException e) {
                 System.err.println(PatchGenLogger.argumentExpected(arg));
                 usage();
-                return;
+                System.exit(1);
             }
         }
 
         TemplateGenerator templateGenerator = new TemplateGenerator(patchID, mpXpVersion, outputDir);
-        templateGenerator.createPatchConfigXml();
+        return templateGenerator.createPatchConfigXml();
     }
 
     private static void usage() {
@@ -92,7 +92,7 @@ class TemplateGenerator {
         System.err.println("this will create a patch-config-[microprofile-expansion-pack-version].xml adjusted for the EAP CP and MP Expansion Pack versions");
     }
 
-    private void createPatchConfigXml() throws Exception {
+    private Path createPatchConfigXml() throws Exception {
         String xml = readBundledPatchConfigXml();
         Path file = Paths.get("patch-config-" + patchID + ".xml");
         if (outputDir != null) {
@@ -103,6 +103,7 @@ class TemplateGenerator {
             file = dir.resolve(file);
         }
         Files.write(file, xml.getBytes(StandardCharsets.UTF_8));
+        return file;
     }
 
     private String readBundledPatchConfigXml() throws Exception {

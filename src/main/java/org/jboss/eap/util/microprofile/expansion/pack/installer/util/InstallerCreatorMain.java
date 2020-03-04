@@ -48,6 +48,7 @@ public class InstallerCreatorMain {
     public static final String INSTALLER_CORE = "--installer-core";
     public static final String ADDED_CONFIGS = "--added-configs";
     public static final String OUTPUT_DIR = "--output-dir";
+    public static final String GENERATE_CONFIG = "--generate-config";
 
     public static void main(String[] args) throws Exception {
         InstallerCreator creator = InstallerCreatorMain.parse(args);
@@ -66,6 +67,7 @@ public class InstallerCreatorMain {
         List<String> addedConfigs = new ArrayList<>();
         Path installerCore = null;
         Path outputDir = null;
+        boolean generateConfig = false;
 
         Set<String> required = new HashSet<>(Arrays.asList(PATCH_CONFIG, EXPANSION_PACK_VERSION, INSTALLER_CORE));
 
@@ -165,6 +167,8 @@ public class InstallerCreatorMain {
                         usage();
                         return null;
                     }
+                } else if (arg.equals(GENERATE_CONFIG)) {
+                    generateConfig = true;
                 } else {
                     System.err.println("Unknown argument: " + arg);
                     usage();
@@ -175,6 +179,27 @@ public class InstallerCreatorMain {
                 usage();
                 return null;
             }
+        }
+
+        if (generateConfig) {
+            if (patchConfig != null) {
+                System.err.println(("You can not use both " + GENERATE_CONFIG + " and " + PATCH_CONFIG));
+                usage();
+                return null;
+            }
+            if (outputDir == null) {
+                System.err.println("You passed in " + GENERATE_CONFIG + " but did not specify " + OUTPUT_DIR);
+                usage();
+                return null;
+            }
+            if (expansionPackVersion == null) {
+                System.err.println("You need to pass in " + EXPANSION_PACK_VERSION);
+                usage();
+                return null;
+            }
+            patchConfig = TemplateGenerator.generate(CREATE_TEMPLATE, expansionPackVersion, outputDir.toString());
+            required.remove(PATCH_CONFIG);
+            patchGenArgs.add(PATCH_CONFIG + "=" + patchConfig.toString());
         }
 
         if (required.size() != 0) {
@@ -223,16 +248,26 @@ public class InstallerCreatorMain {
         Usage usage = new Usage();
 
         usage.addArguments(APPLIES_TO_DIST + "=<file>");
-        usage.addInstruction("Filesystem path of a pristine unzip of the distribution of the version of the software to which the generated patch applies");
+        usage.addInstruction("Filesystem path of a pristine unzip of the distribution of the version of the software " +
+                "to which the generated patch applies");
 
         usage.addArguments("-h", "--help");
         usage.addInstruction("Display this message and exit");
 
         usage.addArguments(PATCH_CONFIG + "=<file>");
-        usage.addInstruction("Filesystem path of the patch generation configuration file to use");
+        usage.addInstruction("Filesystem path of the patch generation configuration file to use. This can be " +
+                "generated in a separate run of the installer tool by passing in the " + CREATE_TEMPLATE + " flag, " +
+                "which allows you to adjust the config as needed before creating the installer. " +
+                "Can not be used with " + GENERATE_CONFIG);
+
+        usage.addArguments(GENERATE_CONFIG);
+        usage.addInstruction("Use to generate the default patch config template. To use this flag you must specify "
+                + OUTPUT_DIR + ", and the resulting patch-config.xml will appear in that directory. Can not be used with " +
+                PATCH_CONFIG);
 
         usage.addArguments(UPDATED_DIST + "=<file>");
-        usage.addInstruction("Filesystem path of a pristine unzip of a distribution of software which contains the changes that should be incorporated in the patch");
+        usage.addInstruction("Filesystem path of a pristine unzip of a distribution of software which contains the " +
+                "changes that should be incorporated in the patch");
 
         usage.addArguments("-v", "--version");
         usage.addInstruction("Print version and exit");
