@@ -18,6 +18,8 @@
 
 package org.jboss.eap.util.microprofile.expansion.pack.installer.util;
 
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,6 +31,8 @@ import java.util.Set;
 
 import org.jboss.as.patching.generator.PatchGenLogger;
 import org.jboss.as.patching.generator.Usage;
+import org.jboss.eap.util.microprofile.expansion.pack.installer.core.InstallerLogger;
+import org.jboss.eap.util.microprofile.expansion.pack.installer.core.InstallerMain;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
@@ -248,7 +252,28 @@ public class InstallerCreatorMain {
         usage.addInstruction("Filesystem path of a directory to output the created installer. This is optional, and if used the " +
                 "patch.zip that is part of the installer will also be output to that directory for easier verification");
 
-        String headline = usage.getDefaultUsageHeadline("eap-mp-expansion-pack-installer-gen");
+        String headline = usage.getDefaultUsageHeadline(getJavaCommand());
         System.out.print(usage.usage(headline));
+    }
+
+    private static String getJavaCommand() {
+        return getJavaCommand(InstallerCreatorMain.class);
+    }
+
+    static String getJavaCommand(Class clazz) {
+        final URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
+        if (url.toString().endsWith(".jar")) {
+            String name;
+            try {
+                name = Paths.get(url.toURI()).getFileName().toString();
+            } catch (URISyntaxException e) {
+                // Just return the name without versions
+                name = "eap-mp-xp-installer-tool.jar";
+            }
+            return "java -jar " + name;
+        } else {
+            return "java " + InstallerCreatorMain.class.getName();
+        }
+
     }
 }
