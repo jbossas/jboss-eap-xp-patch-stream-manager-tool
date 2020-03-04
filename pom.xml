@@ -43,6 +43,11 @@
     <properties>
         <!--Tooling versions -->
         <version.org.jboss.as.patch-gen>2.0.1.Final</version.org.jboss.as.patch-gen>
+
+        <!--
+            This is ONLY here as a convenience to be able to download the installer core jar to the target/
+            directory. This is not needed to do a normal build
+        -->
         <version.org.eap.util.mp.xp.installer.core>1.0.0-SNAPSHOT</version.org.eap.util.mp.xp.installer.core>
     </properties>
 
