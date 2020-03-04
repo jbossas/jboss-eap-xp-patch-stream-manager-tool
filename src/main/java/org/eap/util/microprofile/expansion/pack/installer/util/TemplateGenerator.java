@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -18,26 +19,27 @@ import org.jboss.as.patching.generator.PatchGenLogger;
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
-public class TemplateGenerator {
+class TemplateGenerator {
     private static final String CREATE_TEMPLATE = "--create-template";
     private static final String H = "-h";
     private static final String HELP = "--help";
 
     private final String patchID;
     private final String mpXpVersion;
+    private final String outputDir;
 
-    public TemplateGenerator(String patchID, String mpXpVersion) {
+    private TemplateGenerator(String patchID, String mpXpVersion, String outputDir) {
         this.patchID = patchID;
         this.mpXpVersion = mpXpVersion;
+        this.outputDir = outputDir;
     }
 
     static void generate(final String... args) throws Exception{
 
         String patchID = "mp-xp-";
-        String eapCpVersion = null;
+        String outputDir = null;
         String mpXpVersion = null;
-        final int argsLength = args.length;
-        for (int i = 0; i < argsLength; i++) {
+        for (int i = 0; i < args.length; i++) {
             final String arg = args[i];
             try {
                 if (HELP.equals(arg) || H.equalsIgnoreCase(arg)) {
@@ -46,6 +48,9 @@ public class TemplateGenerator {
                 } else if (arg.equals(CREATE_TEMPLATE)) {
                     mpXpVersion = args[++i];
                     patchID += mpXpVersion;
+                    if (++i < args.length) {
+                        outputDir = args[i];
+                    }
                     continue;
                 } else {
                     System.err.println(PatchGenLogger.argumentExpected(arg));
@@ -59,20 +64,28 @@ public class TemplateGenerator {
             }
         }
 
-        TemplateGenerator templateGenerator = new TemplateGenerator(patchID, mpXpVersion);
+        TemplateGenerator templateGenerator = new TemplateGenerator(patchID, mpXpVersion, outputDir);
         templateGenerator.createPatchConfigXml();
     }
 
-    static void usage() {
+    private static void usage() {
         System.err.println("USAGE:");
-        System.err.println("patch-gen.sh --create-template <microprofile-expansion-pack-version>");
+        System.err.println("patch-gen.sh --create-template <microprofile-expansion-pack-version> [<output-dir>]");
         System.err.println();
-        System.err.println("this will create a patch-config-[patch-id].xml adjusted for the EAP CP and MP Expansion Pack versions");
+        System.err.println("this will create a patch-config-[microprofile-expansion-pack-version].xml adjusted for the EAP CP and MP Expansion Pack versions");
     }
 
     private void createPatchConfigXml() throws Exception {
         String xml = readBundledPatchConfigXml();
-        Files.write(Paths.get("patch-config-" + patchID + ".xml"), xml.getBytes(StandardCharsets.UTF_8));
+        Path file = Paths.get("patch-config-" + patchID + ".xml");
+        if (outputDir != null) {
+            Path dir = Paths.get(outputDir);
+            if (!Files.exists(dir)) {
+                Files.createDirectories(dir);
+            }
+            file = dir.resolve(file);
+        }
+        Files.write(file, xml.getBytes(StandardCharsets.UTF_8));
     }
 
     private String readBundledPatchConfigXml() throws Exception {

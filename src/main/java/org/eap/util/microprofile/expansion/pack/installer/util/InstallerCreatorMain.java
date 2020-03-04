@@ -25,6 +25,7 @@ public class InstallerCreatorMain {
     public static final String EXPANSION_PACK_VERSION = "--expansion-pack-version";
     public static final String INSTALLER_CORE = "--installer-core";
     public static final String ADDED_CONFIGS = "--added-configs";
+    public static final String OUTPUT_DIR = "--output-dir";
 
     public static void main(String[] args) throws Exception {
         InstallerCreator creator = InstallerCreatorMain.parse(args);
@@ -42,6 +43,7 @@ public class InstallerCreatorMain {
         String expansionPackVersion = null;
         List<String> addedConfigs = new ArrayList<>();
         Path installerCore = null;
+        Path outputDir = null;
 
         Set<String> required = new HashSet<>(Arrays.asList(PATCH_CONFIG, EXPANSION_PACK_VERSION, INSTALLER_CORE));
 
@@ -132,6 +134,14 @@ public class InstallerCreatorMain {
                     }
                 } else if (arg.startsWith(ADDED_CONFIGS)) {
                     addedConfigs = Arrays.asList(arg.substring(ADDED_CONFIGS.length() + 1).split(","));
+                } else if (arg.startsWith(OUTPUT_DIR)) {
+                    String val = arg.substring(OUTPUT_DIR.length() + 1);
+                    outputDir = Paths.get(val);
+                    if (Files.exists(outputDir) && !Files.isDirectory(outputDir)) {
+                        System.err.println(arg + " already exists, but it is not a directory");
+                        usage();
+                        return null;
+                    }
                 } else {
                     System.err.println("Unknown argument: " + arg);
                     usage();
@@ -151,7 +161,9 @@ public class InstallerCreatorMain {
         }
 
 
-        return new InstallerCreator(patchGenArgs, patchConfig, oldServerHome, newServerHome, combineWith, expansionPackVersion, addedConfigs, installerCore);
+        return new InstallerCreator(
+                patchGenArgs, patchConfig, oldServerHome, newServerHome, combineWith,
+                expansionPackVersion, addedConfigs, installerCore, outputDir);
     }
 
     private static boolean checkFindLayersRoot(Path serverHome) {
@@ -167,22 +179,21 @@ public class InstallerCreatorMain {
         System.err.println("File at path specified by argument " + arg +" does not exist");
     }
 
-    public static void fileIsNotADirectory(String arg) {
+    private static void fileIsNotADirectory(String arg) {
         System.err.println(PatchGenLogger.fileIsNotADirectory(arg));
     }
 
-    public static void fileIsADirectory(String arg) {
+    private static void fileIsADirectory(String arg) {
         System.err.println(PatchGenLogger.fileIsADirectory(arg));
     }
 
-    public static void argumentExpected(String arg) {
+    private static void argumentExpected(String arg) {
         System.err.println(PatchGenLogger.argumentExpected(arg));
     }
 
-    public static void missingRequiredArgs(Set<String> set) {
+    private static void missingRequiredArgs(Set<String> set) {
         System.err.println(PatchGenLogger.missingRequiredArgs(set));
     }
-
 
     private static void usage() {
 
@@ -214,6 +225,10 @@ public class InstallerCreatorMain {
 
         usage.addArguments(INSTALLER_CORE + "=<file>");
         usage.addInstruction("Filesystem path of the mp-expansion-pack-core jar");
+
+        usage.addArguments(OUTPUT_DIR + "=<file>");
+        usage.addInstruction("Filesystem path of a directory to output the created installer. This is optional, and if used the " +
+                "patch.zip that is part of the installer will also be output to that directory for easier verification");
 
         String headline = usage.getDefaultUsageHeadline("eap-mp-expansion-pack-installer-gen");
         System.out.print(usage.usage(headline));

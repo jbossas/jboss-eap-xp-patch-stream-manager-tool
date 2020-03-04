@@ -38,11 +38,14 @@ class InstallerCreator {
     private final String expansionPackVersion;
     private final List<String> addedConfigs;
     private final Path installerCore;
+    private final Path outputDir;
     private final Path outputInstaller;
     private Path patchFile;
     private Path tmpDir;
 
-    InstallerCreator(List<String> patchGenArgs, Path patchConfig, Path oldServerHome, Path newServerHome, Path combineWith, String expansionPackVersion, List<String> addedConfigs, Path installerCore) {
+    InstallerCreator(List<String> patchGenArgs, Path patchConfig, Path oldServerHome, Path newServerHome,
+                     Path combineWith, String expansionPackVersion, List<String> addedConfigs,
+                     Path installerCore, Path outputDir) throws Exception {
         this.patchGenArgs = patchGenArgs;
         this.patchConfig = patchConfig;
         this.oldServerHome = oldServerHome;
@@ -51,7 +54,14 @@ class InstallerCreator {
         this.expansionPackVersion = expansionPackVersion;
         this.addedConfigs = addedConfigs;
         this.installerCore = installerCore;
-        this.outputInstaller = Paths.get("microprofile-expansion-pack-installer.jar");
+        this.outputDir = outputDir;
+
+        Path tmp = Paths.get("microprofile-expansion-pack-installer.jar");
+        if (outputDir != null) {
+            Files.createDirectories(outputDir);
+            tmp = outputDir.resolve(tmp);
+        }
+        this.outputInstaller = tmp;
     }
 
     void createInstaller() throws Exception {
@@ -70,7 +80,7 @@ class InstallerCreator {
     }
 
     private void cleanup() {
-        if (patchFile != null) {
+        if (patchFile != null && outputDir != null && !patchFile.startsWith(outputDir)) {
             if (Files.exists(patchFile)) {
                 try {
                     Files.delete(patchFile);
@@ -113,7 +123,12 @@ class InstallerCreator {
     }
 
     private void createPatch() throws Exception {
-        patchFile = Files.createTempFile("patch", ".zip");
+        if (outputDir == null) {
+            patchFile = Files.createTempFile("patch", ".zip");
+        } else {
+            patchFile = outputDir.resolve("patch.zip");
+
+        }
         if (!Files.exists(patchFile.getParent())) {
             Files.createDirectories(patchFile.getParent());
         }
