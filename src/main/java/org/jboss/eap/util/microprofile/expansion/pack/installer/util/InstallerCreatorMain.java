@@ -31,8 +31,6 @@ import java.util.Set;
 
 import org.jboss.as.patching.generator.PatchGenLogger;
 import org.jboss.as.patching.generator.Usage;
-import org.jboss.eap.util.microprofile.expansion.pack.installer.core.InstallerLogger;
-import org.jboss.eap.util.microprofile.expansion.pack.installer.core.InstallerMain;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>

@@ -53,12 +53,6 @@
                 <artifactId>patch-gen</artifactId>
                 <version>${version.org.jboss.as.patch-gen}</version>
             </dependency>
-            <dependency>
-                <groupId>org.jboss.eap.util</groupId>
-                <artifactId>eap-mp-xp-installer-core</artifactId>
-                <version>${version.org.eap.util.mp.xp.installer.core}</version>
-                <scope>provided</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -66,10 +60,6 @@
         <dependency>
             <groupId>org.jboss.as</groupId>
             <artifactId>patch-gen</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.eap.util</groupId>
-            <artifactId>eap-mp-xp-installer-core</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
