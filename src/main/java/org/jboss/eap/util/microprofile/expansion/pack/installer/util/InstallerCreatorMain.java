@@ -247,39 +247,27 @@ public class InstallerCreatorMain {
 
         Usage usage = new Usage();
 
+        usage.addArguments(ADDED_CONFIGS + "=<files>");
+        usage.addInstruction("Comma separated list of configuration files, relative to the server root, to add to the patched server. Optional");
+
         usage.addArguments(APPLIES_TO_DIST + "=<file>");
         usage.addInstruction("Filesystem path of a pristine unzip of the distribution of the version of the software " +
                 "to which the generated patch applies");
 
-        usage.addArguments("-h", "--help");
-        usage.addInstruction("Display this message and exit");
+        usage.addArguments(COMBINE_WITH + "=<file>");
+        usage.addInstruction("Filesystem path of the previous CP to be included into the same package with the newly generated one");
 
-        usage.addArguments(PATCH_CONFIG + "=<file>");
-        usage.addInstruction("Filesystem path of the patch generation configuration file to use. This can be " +
-                "generated in a separate run of the installer tool by passing in the " + CREATE_TEMPLATE + " flag, " +
-                "which allows you to adjust the config as needed before creating the installer. " +
-                "Can not be used with " + GENERATE_CONFIG);
+        usage.addArguments(EXPANSION_PACK_VERSION + "=<version>");
+        usage.addInstruction("The version of the expansion pack. It will be used for the patch id" +
+                "and the overlays in the patch");
 
         usage.addArguments(GENERATE_CONFIG);
         usage.addInstruction("Use to generate the default patch config template. To use this flag you must specify "
                 + OUTPUT_DIR + ", and the resulting patch-config.xml will appear in that directory. Can not be used with " +
                 PATCH_CONFIG);
 
-        usage.addArguments(UPDATED_DIST + "=<file>");
-        usage.addInstruction("Filesystem path of a pristine unzip of a distribution of software which contains the " +
-                "changes that should be incorporated in the patch");
-
-        usage.addArguments("-v", "--version");
-        usage.addInstruction("Print version and exit");
-
-        usage.addArguments(COMBINE_WITH + "=<file>");
-        usage.addInstruction("Filesystem path of the previous CP to be included into the same package with the newly generated one");
-
-        usage.addArguments(EXPANSION_PACK_VERSION + "=<version>");
-        usage.addInstruction("The version of the expansion pack. It will be used both for the resulting jars, and the overlays in the patch");
-
-        usage.addArguments(ADDED_CONFIGS + "=<files>");
-        usage.addInstruction("Comma separated list of configuration files, relative to the server root, to add to the patched server. Optional");
+        usage.addArguments("-h", "--help");
+        usage.addInstruction("Display this message and exit");
 
         usage.addArguments(INSTALLER_CORE + "=<file>");
         usage.addInstruction("Filesystem path of the mp-expansion-pack-core jar");
@@ -287,6 +275,16 @@ public class InstallerCreatorMain {
         usage.addArguments(OUTPUT_DIR + "=<file>");
         usage.addInstruction("Filesystem path of a directory to output the created installer. This is optional, and if used the " +
                 "patch.zip that is part of the installer will also be output to that directory for easier verification");
+
+        usage.addArguments(PATCH_CONFIG + "=<file>");
+        usage.addInstruction("Filesystem path of the patch generation configuration file to use. This can be " +
+                "generated in a separate run of the installer tool by passing in the " + CREATE_TEMPLATE + " flag, " +
+                "which allows you to adjust the config as needed before creating the installer. " +
+                "Can not be used with " + GENERATE_CONFIG);
+
+        usage.addArguments(UPDATED_DIST + "=<file>");
+        usage.addInstruction("Filesystem path of a pristine unzip of a distribution of software which contains the " +
+                "changes that should be incorporated in the patch");
 
         String headline = usage.getDefaultUsageHeadline(getJavaCommand());
         System.out.print(usage.usage(headline));
