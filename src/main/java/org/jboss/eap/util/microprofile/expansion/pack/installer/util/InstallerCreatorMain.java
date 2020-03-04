@@ -130,6 +130,7 @@ public class InstallerCreatorMain {
                     return null;
                 } else if (arg.startsWith(COMBINE_WITH)) {
                     String val = arg.substring(COMBINE_WITH.length() + 1);
+                    patchGenArgs.add(arg);
                     combineWith = Paths.get(val);
                     if (!Files.exists(combineWith)) {
                         fileDoesNotExist(arg);
