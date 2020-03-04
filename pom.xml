@@ -44,21 +44,6 @@
         <!--Tooling versions -->
         <version.org.jboss.as.patch-gen>2.0.1.Final</version.org.jboss.as.patch-gen>
         <version.org.eap.util.mp.xp.installer.core>1.0.0-SNAPSHOT</version.org.eap.util.mp.xp.installer.core>
-
-        <!--
-            These are only needed if running the tool from Maven
-        -->
-        <!-- Base server dist location (i.e. the server to be patched) for the patch diff -->
-        <dist.location.appliesTo>/set/this/path</dist.location.appliesTo>
-        <!-- Updated server dist location (i.e. the server to be patched) for the patch diff -->
-        <dist.location.updated>/set/this/path</dist.location.updated>
-        <!-- Patch to combine with -->
-        <patch.combine.with></patch.combine.with>
-        <!-- Expansion pack version -->
-        <expansion.pack.version>1.0</expansion.pack.version>
-        <!-- Layers (comma separated), that need adding to the appliesTo server for the patching to work. -->
-        <added.layers>microprofile</added.layers>
-
     </properties>
 
     <dependencyManagement>
@@ -122,44 +107,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>prepare-patch</id>
-            <activation>
-                <property>
-                    <name>prepare-patch</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>run-installer-creator</id>
-                                <goals>
-                                    <goal>java</goal>
-                                </goals>
-                                <phase>process-classes</phase>
-                                <configuration>
-                                    <mainClass>org.jboss.eap.util.microprofile.expansion.pack.installer.util.InstallerCreatorMain</mainClass>
-                                    <arguments>
-                                        <argument>--applies-to-dist=${dist.location.appliesTo}</argument>
-                                        <argument>--updated-dist=${dist.location.updated}</argument>
-                                        <!-- is this one a bit weird; could it be more automatic? -->
-                                        <argument>--patch-config=XXXX</argument>
-                                        <argument>--layers=${added.layers}</argument>
-                                        <argument>--added-configs=standalone/configuration/standalone-microprofile.xml,standalone/configuration/standalone-microprofile-ha.xml</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
