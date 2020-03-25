@@ -23,10 +23,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,10 +32,10 @@ import java.util.Set;
  */
 public class InstallerCreatorMain {
 
-    public static final String CREATE_TEMPLATE = "--create-template";
-    public static final String INSTALLER_CORE = "--installer-core";
-    public static final String ADDED_CONFIGS_ROOT = "--added-configs-root";
-    public static final String OUTPUT_DIR = "--output-dir";
+    static final String CREATE_CONFIG = "--create-config";
+    private static final String INSTALLER_CORE = "--installer-core";
+    private static final String ADDED_CONFIGS_ROOT = "--added-configs-root";
+    private static final String OUTPUT_DIR = "--output-dir";
 
     public static void main(String[] args) throws Exception {
         InstallerCreator creator = InstallerCreatorMain.parse(args);
@@ -61,8 +59,8 @@ public class InstallerCreatorMain {
                 if ("--help".equals(arg) || "-h".equals(arg) || "-H".equals(arg)) {
                     usage();
                     return null;
-                } else if (arg.equals(CREATE_TEMPLATE)) {
-                    TemplateGenerator.generate(args);
+                } else if (arg.equals(CREATE_CONFIG)) {
+                    ConfigCreator.generate(args);
                     return null;
                 } else if (arg.startsWith(INSTALLER_CORE)) {
                     required.remove(INSTALLER_CORE);
@@ -134,8 +132,10 @@ public class InstallerCreatorMain {
         usage.addInstruction("Filesystem path of the mp-expansion-pack-core jar");
 
         usage.addArguments(OUTPUT_DIR + "=<file>");
-        usage.addInstruction("Filesystem path of a directory to output the created installer. This is optional, and if used the " +
-                "patch.zip that is part of the installer will also be output to that directory for easier verification");
+        usage.addInstruction("Filesystem path of a directory to output the created installer. The resulting jar will be called jboss-eap-xp-installer.jar");
+
+        usage.addArguments(CREATE_CONFIG);
+        usage.addInstruction("If passed in the other parameters will be ignored, and a patch config xml will be created.");
 
         String headline = usage.getDefaultUsageHeadline(getJavaCommand());
         System.out.print(usage.usage(headline));

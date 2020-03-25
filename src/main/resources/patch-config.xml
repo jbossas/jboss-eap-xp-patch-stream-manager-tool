@@ -16,25 +16,31 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
-<patch-config xmlns="urn:jboss:patch-config:1.2">
-    <name>eap-mp-expansion-pack-${expansion.pack.version}</name>
-    <description>EAP MicroProfile Expansion Pack ${expansion.pack.version}</description>
-    <cumulative />
-    <element patch-id="layer-base-jboss-eap-mp-xp-${expansion.pack.version}">
-        <cumulative name="base"/>
-    </element>
-    <element patch-id="layer-microprofile-jboss-eap-mp-xp-${expansion.pack.version}">
+<patch-config xmlns="urn:jboss:patch-config:1.3">
+    <name>
+        jboss-eap-xp-${expansion.pack.version}.CP
+    </name>
+    <description>
+        No description available
+    </description>
+    <cumulative
+            name="jboss-eap-xp-1.0"
+            applies-to-version="${applies.to.version}"
+            resulting-version="${expansion.pack.version}.GA"
+            skip-non-configured-layers="true"
+            override-identity="true">
+        <skip-misc-files>
+            <exception>docs/examples/enable-microprofile.cli</exception>
+            <exception>docs/licenses/microprofile-feature-pack-licenses\..*</exception>
+            <exception>docs/schema/wildfly-microprofile-.*.xsd</exception>
+        </skip-misc-files>
+    </cumulative>
+    <element patch-id="layer-jboss-eap-xp-${expansion.pack.version}.CP">
         <cumulative name="microprofile"/>
+        <description>
+            No description available
+        </description>
     </element>
-    <generate-by-diff />
-    <optional-paths>
-        <path value="docs"/>
-        <path value="appclient"/>
-        <path value="bin/appclient.bat" requires="appclient"/>
-        <path value="bin/appclient.conf" requires="appclient"/>
-        <path value="bin/appclient.conf.bat" requires="appclient"/>
-        <path value="bin/appclient.conf.ps1" requires="appclient"/>
-        <path value="bin/appclient.ps1" requires="appclient"/>
-    </optional-paths>
+    <generate-by-diff/>
 </patch-config>
+
