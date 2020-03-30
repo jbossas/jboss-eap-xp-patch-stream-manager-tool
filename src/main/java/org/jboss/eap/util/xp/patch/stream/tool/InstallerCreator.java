@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -42,14 +43,14 @@ import java.util.zip.ZipOutputStream;
 class InstallerCreator {
     private static final String LAYERS_MANIFEST_KEY = "server-target-layers";
 
-    private final Path addedConfigsRoot;
+    private final List<Path> addedConfigFiles;
     private final Path installerCore;
     private final Path outputDir;
     private final Path outputInstaller;
     private Path tmpDir;
 
-    InstallerCreator(Path addedConfigsRoot, Path installerCore, Path outputDir) throws Exception {
-        this.addedConfigsRoot = addedConfigsRoot;
+    InstallerCreator(List<Path> addedConfigFiles, Path installerCore, Path outputDir) throws Exception {
+        this.addedConfigFiles = addedConfigFiles;
         this.installerCore = installerCore;
         this.outputDir = outputDir;
 
@@ -150,7 +151,7 @@ class InstallerCreator {
 
 
     private void copyConfigsToInstaller() throws Exception {
-        if (addedConfigsRoot == null) {
+        if (addedConfigFiles == null) {
             return;
         }
         Path configsDirectory = tmpDir.resolve("added-configs");
@@ -158,19 +159,11 @@ class InstallerCreator {
             Files.createDirectories(configsDirectory);
         }
 
-        Files.walkFileTree(addedConfigsRoot, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Path relative = addedConfigsRoot.relativize(file);
-                Path tgt = configsDirectory.resolve(relative);
-                System.out.println("Copying " + file.toAbsolutePath() + " to " + tgt.toAbsolutePath());
-                Files.createDirectories(tgt.getParent());
-                Files.copy(file, tgt);
-                return FileVisitResult.CONTINUE;
-
-            }
-        });
-    }
+        for (Path path : addedConfigFiles) {
+            Path target = configsDirectory.resolve(path.getFileName());
+            Files.copy(path, target);
+        }
+   }
 
     private void zipInstaller() throws Exception {
         try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputInstaller.toFile())))) {

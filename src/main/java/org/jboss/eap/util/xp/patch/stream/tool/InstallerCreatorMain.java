@@ -23,8 +23,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,7 +36,7 @@ public class InstallerCreatorMain {
 
     static final String CREATE_CONFIG = "--create-config";
     private static final String INSTALLER_CORE = "--installer-core";
-    private static final String ADDED_CONFIGS_ROOT = "--added-configs-root";
+    private static final String ADDED_CONFIGS = "--added-configs";
     private static final String OUTPUT_DIR = "--output-dir";
 
     public static void main(String[] args) throws Exception {
@@ -46,7 +48,7 @@ public class InstallerCreatorMain {
 
     private static InstallerCreator parse(String[] args) throws Exception {
 
-        Path addedConfigsRoot = null;
+        List<Path> addedConfigFiles = new ArrayList<>();
         Path installerCore = null;
         Path outputDir = null;
 
@@ -77,15 +79,20 @@ public class InstallerCreatorMain {
                         usage();
                         return null;
                     }
-                } else if (arg.startsWith(ADDED_CONFIGS_ROOT)) {
-                    String val = arg.substring(ADDED_CONFIGS_ROOT.length() + 1);
-                    addedConfigsRoot = Paths.get(val);
-                    if (!Files.exists(addedConfigsRoot)) {
-                        ToolLogger.fileDoesNotExist(arg);
-                        return null;
-                    } else if (!Files.isDirectory(addedConfigsRoot)) {
-                        ToolLogger.fileIsNotADirectory(arg);
-                        return null;
+                } else if (arg.startsWith(ADDED_CONFIGS)) {
+                    String val = arg.substring(ADDED_CONFIGS.length() + 1);
+                    String[] parts = val.split(",");
+                    for (String part : parts) {
+                        Path path = Paths.get(part);
+                        if (!Files.exists(path)) {
+                            ToolLogger.fileInListArgDoesNotExist(path.toString(), arg);
+                            return null;
+                        }
+                        if (!Files.exists(path)) {
+                            ToolLogger.fileInListArgIsNotAFile(path.toString(), arg);
+                            return null;
+                        }
+                        addedConfigFiles.add(path);
                     }
                 } else if (arg.startsWith(OUTPUT_DIR)) {
                     String val = arg.substring(OUTPUT_DIR.length() + 1);
@@ -114,7 +121,7 @@ public class InstallerCreatorMain {
         }
 
 
-        return new InstallerCreator(addedConfigsRoot, installerCore, outputDir);
+        return new InstallerCreator(addedConfigFiles, installerCore, outputDir);
     }
 
 
@@ -122,8 +129,8 @@ public class InstallerCreatorMain {
 
         Usage usage = new Usage();
 
-        usage.addArguments(ADDED_CONFIGS_ROOT + "=<directory>");
-        usage.addInstruction("File system path to directory containing configuration files. The files will be added to the same relative location of the target server. Optional");
+        usage.addArguments(ADDED_CONFIGS + "=<directory>");
+        usage.addInstruction("Comma-separated list of file system paths to server configuration files that should be included in the installer");
 
         usage.addArguments("-h", "--help");
         usage.addInstruction("Display this message and exit");

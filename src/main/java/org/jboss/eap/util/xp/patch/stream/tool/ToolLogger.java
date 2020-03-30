@@ -18,6 +18,14 @@ public class ToolLogger {
         System.err.println("File at path specified by argument " + arg + " is a directory");
     }
 
+    static void fileInListArgDoesNotExist(String path, String arg) {
+        System.err.println("File at " + path + " specified by argument " + arg + " does not exist");
+    }
+
+    static void fileInListArgIsNotAFile(String path, String arg) {
+        System.err.println("File at " + path + " specified by argument " + arg + " is not a file");
+    }
+
     static void argumentExpected(String arg) {
         System.err.println("Argument expected for option " + arg);
     }
