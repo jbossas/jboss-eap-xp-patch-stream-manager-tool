@@ -45,13 +45,15 @@ class InstallerCreator {
 
     private final List<Path> addedConfigFiles;
     private final Path installerCore;
+    private final boolean deleteCoreAtEnd;
     private final Path outputDir;
     private final Path outputInstaller;
     private Path tmpDir;
 
-    InstallerCreator(List<Path> addedConfigFiles, Path installerCore, Path outputDir) throws Exception {
+    InstallerCreator(List<Path> addedConfigFiles, Path installerCore, boolean deleteCoreAtEnd, Path outputDir) throws Exception {
         this.addedConfigFiles = addedConfigFiles;
         this.installerCore = installerCore;
+        this.deleteCoreAtEnd = deleteCoreAtEnd;
         this.outputDir = outputDir;
 
         Path tmp = Paths.get("jboss-eap-xp-installer.jar");
@@ -92,6 +94,13 @@ class InstallerCreator {
                 });
             } catch (IOException e) {
                 System.err.println("Problems deleting" + tmpDir + " recursively: " + e.getLocalizedMessage());
+            }
+        }
+        if (deleteCoreAtEnd) {
+            try {
+                Files.delete(installerCore);
+            } catch (IOException e) {
+                System.err.println("Problems deleting downloaded installer core from " + tmpDir + ": " + e.getLocalizedMessage());
             }
         }
     }

@@ -18,8 +18,15 @@
 
 package org.jboss.eap.util.xp.patch.stream.tool;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +46,10 @@ public class InstallerCreatorMain {
     private static final String ADDED_CONFIGS = "--added-configs";
     private static final String OUTPUT_DIR = "--output-dir";
 
+    private static final String HTTP = "http://";
+    private static final String HTTPS = "https://";
+
+
     public static void main(String[] args) throws Exception {
         InstallerCreator creator = InstallerCreatorMain.parse(args);
         if (creator != null) {
@@ -50,78 +61,115 @@ public class InstallerCreatorMain {
 
         List<Path> addedConfigFiles = new ArrayList<>();
         Path installerCore = null;
+        boolean installerCoreIsTemp = false;
         Path outputDir = null;
 
-        Set<String> required = new HashSet<>(Arrays.asList(INSTALLER_CORE));
+        boolean error = true;
+        try {
+            Set<String> required = new HashSet<>(Arrays.asList(INSTALLER_CORE));
+            final int argsLength = args.length;
+            for (int i = 0; i < argsLength; i++) {
+                final String arg = args[i];
+                try {
+                    if ("--help".equals(arg) || "-h".equals(arg) || "-H".equals(arg)) {
+                        usage();
+                        return null;
+                    } else if (arg.equals(CREATE_CONFIG)) {
+                        ConfigCreator.generate(args);
+                        return null;
+                    } else if (arg.startsWith(INSTALLER_CORE)) {
+                        required.remove(INSTALLER_CORE);
+                        String val = arg.substring(INSTALLER_CORE.length() + 1);
 
-        final int argsLength = args.length;
-        for (int i = 0; i < argsLength; i++) {
-            final String arg = args[i];
-            try {
-                if ("--help".equals(arg) || "-h".equals(arg) || "-H".equals(arg)) {
-                    usage();
-                    return null;
-                } else if (arg.equals(CREATE_CONFIG)) {
-                    ConfigCreator.generate(args);
-                    return null;
-                } else if (arg.startsWith(INSTALLER_CORE)) {
-                    required.remove(INSTALLER_CORE);
-                    String val = arg.substring(INSTALLER_CORE.length() + 1);
-                    installerCore = Paths.get(val);
-                    if (!Files.exists(installerCore)) {
-                        ToolLogger.fileDoesNotExist(arg);
-                        return null;
-                    } else if (Files.isDirectory(installerCore)) {
-                        ToolLogger.fileIsADirectory(arg);
-                        return null;
-                    } else if (!installerCore.getFileName().toString().endsWith(".jar")) {
-                        System.err.println(installerCore + " does not appear to be a jar file");
+                        installerCore = downloadIfNeeded(val);
+                        if (installerCore != null) {
+                            installerCoreIsTemp = true;
+                        } else {
+                            installerCore = Paths.get(val);
+
+                            if (!Files.exists(installerCore)) {
+                                ToolLogger.fileDoesNotExist(arg);
+                                return null;
+                            } else if (Files.isDirectory(installerCore)) {
+                                ToolLogger.fileIsADirectory(arg);
+                                return null;
+                            } else if (!installerCore.getFileName().toString().endsWith(".jar")) {
+                                System.err.println(installerCore + " does not appear to be a jar file");
+                                usage();
+                                return null;
+                            }
+                        }
+                    } else if (arg.startsWith(ADDED_CONFIGS)) {
+                        String val = arg.substring(ADDED_CONFIGS.length() + 1);
+                        String[] parts = val.split(",");
+                        for (String part : parts) {
+                            Path path = Paths.get(part);
+                            if (!Files.exists(path)) {
+                                ToolLogger.fileInListArgDoesNotExist(path.toString(), arg);
+                                return null;
+                            }
+                            if (!Files.exists(path)) {
+                                ToolLogger.fileInListArgIsNotAFile(path.toString(), arg);
+                                return null;
+                            }
+                            addedConfigFiles.add(path);
+                        }
+                    } else if (arg.startsWith(OUTPUT_DIR)) {
+                        String val = arg.substring(OUTPUT_DIR.length() + 1);
+                        outputDir = Paths.get(val);
+                        if (Files.exists(outputDir) && !Files.isDirectory(outputDir)) {
+                            System.err.println(arg + " already exists, but it is not a directory");
+                            usage();
+                            return null;
+                        }
+                    } else {
+                        System.err.println("Unknown argument: " + arg);
                         usage();
                         return null;
                     }
-                } else if (arg.startsWith(ADDED_CONFIGS)) {
-                    String val = arg.substring(ADDED_CONFIGS.length() + 1);
-                    String[] parts = val.split(",");
-                    for (String part : parts) {
-                        Path path = Paths.get(part);
-                        if (!Files.exists(path)) {
-                            ToolLogger.fileInListArgDoesNotExist(path.toString(), arg);
-                            return null;
-                        }
-                        if (!Files.exists(path)) {
-                            ToolLogger.fileInListArgIsNotAFile(path.toString(), arg);
-                            return null;
-                        }
-                        addedConfigFiles.add(path);
-                    }
-                } else if (arg.startsWith(OUTPUT_DIR)) {
-                    String val = arg.substring(OUTPUT_DIR.length() + 1);
-                    outputDir = Paths.get(val);
-                    if (Files.exists(outputDir) && !Files.isDirectory(outputDir)) {
-                        System.err.println(arg + " already exists, but it is not a directory");
-                        usage();
-                        return null;
-                    }
-                } else {
-                    System.err.println("Unknown argument: " + arg);
+                } catch (IndexOutOfBoundsException e) {
+                    ToolLogger.argumentExpected(arg);
                     usage();
                     return null;
                 }
-            } catch (IndexOutOfBoundsException e) {
-                ToolLogger.argumentExpected(arg);
+            }
+
+            if (required.size() != 0) {
+                ToolLogger.missingRequiredArgs(required);
                 usage();
                 return null;
             }
+            error = false;
+        } finally {
+            if (error && installerCoreIsTemp) {
+                Files.delete(installerCore);
+            }
         }
 
-        if (required.size() != 0) {
-            ToolLogger.missingRequiredArgs(required);
-            usage();
+        return new InstallerCreator(addedConfigFiles, installerCore, installerCoreIsTemp, outputDir);
+    }
+
+    private static Path downloadIfNeeded(String location) throws IOException {
+        if (!location.startsWith(HTTP) && !location.startsWith(HTTPS)) {
             return null;
         }
 
+        URL url = new URL(location);
+        URLConnection connection = url.openConnection();
 
-        return new InstallerCreator(addedConfigFiles, installerCore, outputDir);
+        Path tmp = Files.createTempFile("jboss-eap-xp-installer", ".jar");
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp.toFile()))) {
+            byte[] buffer = new byte[1024];
+            try (InputStream in = new BufferedInputStream(connection.getInputStream())) {
+                int len = in.read(buffer, 0, buffer.length);
+                while (len != -1) {
+                    out.write(buffer, 0, len);
+                    len = in.read(buffer, 0, buffer.length);
+                }
+            }
+        }
+
+        return tmp;
     }
 
 
