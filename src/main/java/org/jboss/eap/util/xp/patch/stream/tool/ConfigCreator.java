@@ -121,7 +121,7 @@ class ConfigCreator {
 
     private static void usage() {
         System.err.println("USAGE:");
-        System.err.println(InstallerCreatorMain.getJavaCommand(ConfigCreator.class) + " --create-template <microprofile-expansion-pack-version> [<output-dir>]");
+        System.err.println(InstallerCreatorMain.getJavaCommand(ConfigCreator.class) + " --create-config <microprofile-expansion-pack-version> [<output-dir>]");
         System.err.println();
         System.err.println("this will create a patch-config-[microprofile-expansion-pack-version].xml adjusted for the EAP CP and MP Expansion Pack versions");
     }
