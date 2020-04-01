@@ -39,10 +39,10 @@ import java.util.Set;
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
-public class InstallerCreatorMain {
+public class ManagerCreatorMain {
 
     static final String CREATE_CONFIG = "--create-config";
-    private static final String INSTALLER_CORE = "--installer-core";
+    private static final String MANAGER_CORE = "--manager-core";
     private static final String ADDED_CONFIGS = "--added-configs";
     private static final String OUTPUT_DIR = "--output-dir";
 
@@ -51,22 +51,22 @@ public class InstallerCreatorMain {
 
 
     public static void main(String[] args) throws Exception {
-        InstallerCreator creator = InstallerCreatorMain.parse(args);
+        ManagerCreator creator = ManagerCreatorMain.parse(args);
         if (creator != null) {
-            creator.createInstaller();
+            creator.createManager();
         }
     }
 
-    private static InstallerCreator parse(String[] args) throws Exception {
+    private static ManagerCreator parse(String[] args) throws Exception {
 
         List<Path> addedConfigFiles = new ArrayList<>();
-        Path installerCore = null;
-        boolean installerCoreIsTemp = false;
+        Path managerCore = null;
+        boolean managerCoreIsTemp = false;
         Path outputDir = null;
 
         boolean error = true;
         try {
-            Set<String> required = new HashSet<>(Arrays.asList(INSTALLER_CORE));
+            Set<String> required = new HashSet<>(Arrays.asList(MANAGER_CORE));
             final int argsLength = args.length;
             for (int i = 0; i < argsLength; i++) {
                 final String arg = args[i];
@@ -77,24 +77,24 @@ public class InstallerCreatorMain {
                     } else if (arg.equals(CREATE_CONFIG)) {
                         ConfigCreator.generate(args);
                         return null;
-                    } else if (arg.startsWith(INSTALLER_CORE)) {
-                        required.remove(INSTALLER_CORE);
-                        String val = arg.substring(INSTALLER_CORE.length() + 1);
+                    } else if (arg.startsWith(MANAGER_CORE)) {
+                        required.remove(MANAGER_CORE);
+                        String val = arg.substring(MANAGER_CORE.length() + 1);
 
-                        installerCore = downloadIfNeeded(val);
-                        if (installerCore != null) {
-                            installerCoreIsTemp = true;
+                        managerCore = downloadIfNeeded(val);
+                        if (managerCore != null) {
+                            managerCoreIsTemp = true;
                         } else {
-                            installerCore = Paths.get(val);
+                            managerCore = Paths.get(val);
 
-                            if (!Files.exists(installerCore)) {
+                            if (!Files.exists(managerCore)) {
                                 ToolLogger.fileDoesNotExist(arg);
                                 return null;
-                            } else if (Files.isDirectory(installerCore)) {
+                            } else if (Files.isDirectory(managerCore)) {
                                 ToolLogger.fileIsADirectory(arg);
                                 return null;
-                            } else if (!installerCore.getFileName().toString().endsWith(".jar")) {
-                                System.err.println(installerCore + " does not appear to be a jar file");
+                            } else if (!managerCore.getFileName().toString().endsWith(".jar")) {
+                                System.err.println(managerCore + " does not appear to be a jar file");
                                 usage();
                                 return null;
                             }
@@ -141,12 +141,12 @@ public class InstallerCreatorMain {
             }
             error = false;
         } finally {
-            if (error && installerCoreIsTemp) {
-                Files.delete(installerCore);
+            if (error && managerCoreIsTemp) {
+                Files.delete(managerCore);
             }
         }
 
-        return new InstallerCreator(addedConfigFiles, installerCore, installerCoreIsTemp, outputDir);
+        return new ManagerCreator(addedConfigFiles, managerCore, managerCoreIsTemp, outputDir);
     }
 
     private static Path downloadIfNeeded(String location) throws IOException {
@@ -157,7 +157,7 @@ public class InstallerCreatorMain {
         URL url = new URL(location);
         URLConnection connection = url.openConnection();
 
-        Path tmp = Files.createTempFile("jboss-eap-xp-installer", ".jar");
+        Path tmp = Files.createTempFile("jboss-eap-xp-manager", ".jar");
         try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp.toFile()))) {
             byte[] buffer = new byte[1024];
             try (InputStream in = new BufferedInputStream(connection.getInputStream())) {
@@ -178,16 +178,16 @@ public class InstallerCreatorMain {
         Usage usage = new Usage();
 
         usage.addArguments(ADDED_CONFIGS + "=<directory>");
-        usage.addInstruction("Comma-separated list of file system paths to server configuration files that should be included in the installer");
+        usage.addInstruction("Comma-separated list of file system paths to server configuration files that should be included in the manager");
 
         usage.addArguments("-h", "--help");
         usage.addInstruction("Display this message and exit");
 
-        usage.addArguments(INSTALLER_CORE + "=<file>");
+        usage.addArguments(MANAGER_CORE + "=<file>");
         usage.addInstruction("Filesystem path of the mp-expansion-pack-core jar");
 
         usage.addArguments(OUTPUT_DIR + "=<file>");
-        usage.addInstruction("Filesystem path of a directory to output the created installer. The resulting jar will be called jboss-eap-xp-installer.jar");
+        usage.addInstruction("Filesystem path of a directory to output the created manager. The resulting jar will be called jboss-eap-xp-manager.jar");
 
         usage.addArguments(CREATE_CONFIG);
         usage.addInstruction("If passed in the other parameters will be ignored, and a patch config xml will be created.");
@@ -197,7 +197,7 @@ public class InstallerCreatorMain {
     }
 
     private static String getJavaCommand() {
-        return getJavaCommand(InstallerCreatorMain.class);
+        return getJavaCommand(ManagerCreatorMain.class);
     }
 
     static String getJavaCommand(Class clazz) {
@@ -208,11 +208,11 @@ public class InstallerCreatorMain {
                 name = Paths.get(url.toURI()).getFileName().toString();
             } catch (URISyntaxException e) {
                 // Just return the name without versions
-                name = "eap-mp-xp-installer-tool.jar";
+                name = "jboss-eap-xp-patch-stream-manager-tool.jar";
             }
             return "java -jar " + name;
         } else {
-            return "java " + InstallerCreatorMain.class.getName();
+            return "java " + ManagerCreatorMain.class.getName();
         }
 
     }

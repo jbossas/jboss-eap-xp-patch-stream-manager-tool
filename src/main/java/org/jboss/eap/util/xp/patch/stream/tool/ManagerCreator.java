@@ -40,36 +40,36 @@ import java.util.zip.ZipOutputStream;
 /**
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
-class InstallerCreator {
+class ManagerCreator {
     private static final String LAYERS_MANIFEST_KEY = "server-target-layers";
 
     private final List<Path> addedConfigFiles;
-    private final Path installerCore;
+    private final Path managerCore;
     private final boolean deleteCoreAtEnd;
     private final Path outputDir;
-    private final Path outputInstaller;
+    private final Path outputManager;
     private Path tmpDir;
 
-    InstallerCreator(List<Path> addedConfigFiles, Path installerCore, boolean deleteCoreAtEnd, Path outputDir) throws Exception {
+    ManagerCreator(List<Path> addedConfigFiles, Path managerCore, boolean deleteCoreAtEnd, Path outputDir) throws Exception {
         this.addedConfigFiles = addedConfigFiles;
-        this.installerCore = installerCore;
+        this.managerCore = managerCore;
         this.deleteCoreAtEnd = deleteCoreAtEnd;
         this.outputDir = outputDir;
 
-        Path tmp = Paths.get("jboss-eap-xp-installer.jar");
+        Path tmp = Paths.get("jboss-eap-xp-manager.jar");
         if (outputDir != null) {
             Files.createDirectories(outputDir);
             tmp = outputDir.resolve(tmp);
         }
-        this.outputInstaller = tmp;
+        this.outputManager = tmp;
     }
 
-    void createInstaller() throws Exception {
+    void createManager() throws Exception {
         try {
-            this.tmpDir = unzipInstallerCore();
+            this.tmpDir = unzipManagerCore();
             addManifestLayers();
-            copyConfigsToInstaller();
-            zipInstaller();
+            copyConfigsToManager();
+            zipManager();
         } finally {
             cleanup();
         }
@@ -98,19 +98,18 @@ class InstallerCreator {
         }
         if (deleteCoreAtEnd) {
             try {
-                Files.delete(installerCore);
+                Files.delete(managerCore);
             } catch (IOException e) {
-                System.err.println("Problems deleting downloaded installer core from " + tmpDir + ": " + e.getLocalizedMessage());
+                System.err.println("Problems deleting downloaded manager core from " + tmpDir + ": " + e.getLocalizedMessage());
             }
         }
     }
 
 
-    private Path unzipInstallerCore() throws IOException {
-        Path tmpDir = Files.createTempDirectory("mp-installer");
+    private Path unzipManagerCore() throws IOException {
+        Path tmpDir = Files.createTempDirectory("mp-manager");
         byte[] buffer = new byte[1024];
-        boolean foundPatch = false;
-        try (ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(installerCore.toFile())))) {
+        try (ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(managerCore.toFile())))) {
             ZipEntry entry = zin.getNextEntry();
             while (entry != null) {
                 try {
@@ -159,7 +158,7 @@ class InstallerCreator {
     }
 
 
-    private void copyConfigsToInstaller() throws Exception {
+    private void copyConfigsToManager() throws Exception {
         if (addedConfigFiles == null) {
             return;
         }
@@ -174,8 +173,8 @@ class InstallerCreator {
         }
    }
 
-    private void zipInstaller() throws Exception {
-        try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputInstaller.toFile())))) {
+    private void zipManager() throws Exception {
+        try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputManager.toFile())))) {
             Files.walkFileTree(tmpDir, new SimpleFileVisitor<Path>(){
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

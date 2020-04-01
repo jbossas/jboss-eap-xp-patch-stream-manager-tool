@@ -1,5 +1,5 @@
-# EAP MicroProfile Expansion Pack Installer
+# EAP MicroProfile Expansion Pack Manager Tool
 
-Creates an installer to install the MicroProfile Expansion Pack into EAP 7.3.0.
+Tooling to create a patch stream manager that will be shipped to customer, enabling them to set up the JBoss EAP XP patch stream in JBoss EAP 7.3.z.
 
-It relies on code from the accompanying [eap-mp-xp-installer-core](https://github.com/jbossas/eap-mp-xp-installer-core). 
+It relies on code from the accompanying [jboss-eap-xp-patch-stream-manager](https://github.com/jbossas/jboss-eap-xp-patch-stream-manager). 

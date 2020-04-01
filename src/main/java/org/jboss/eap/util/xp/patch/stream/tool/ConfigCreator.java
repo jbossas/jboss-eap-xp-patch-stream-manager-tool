@@ -61,7 +61,7 @@ class ConfigCreator {
                 if (HELP.equals(arg) || H.equalsIgnoreCase(arg)) {
                     usage();
                     System.exit(1);
-                } else if (arg.equals(InstallerCreatorMain.CREATE_CONFIG)) {
+                } else if (arg.equals(ManagerCreatorMain.CREATE_CONFIG)) {
                     i++;
                     if (i > args.length) {
                         usage();
@@ -121,7 +121,7 @@ class ConfigCreator {
 
     private static void usage() {
         System.err.println("USAGE:");
-        System.err.println(InstallerCreatorMain.getJavaCommand(ConfigCreator.class) + " --create-config <microprofile-expansion-pack-version> [<output-dir>]");
+        System.err.println(ManagerCreatorMain.getJavaCommand(ConfigCreator.class) + " --create-config <microprofile-expansion-pack-version> [<output-dir>]");
         System.err.println();
         System.err.println("this will create a patch-config-[microprofile-expansion-pack-version].xml adjusted for the EAP CP and MP Expansion Pack versions");
     }
