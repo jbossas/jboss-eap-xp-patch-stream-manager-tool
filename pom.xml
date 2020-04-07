@@ -29,7 +29,7 @@
 
     <groupId>org.jboss.eap.util</groupId>
     <artifactId>jboss-eap-xp-patch-stream-manager-tool</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0.Final</version>
     <packaging>jar</packaging>
 
     <licenses>
