@@ -40,14 +40,23 @@ class ConfigCreator {
     private static final String HELP = "--help";
 
     private static final Pattern MP_VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.GA");
+    private static final Pattern MAJOR_VERSION_PATTERN = Pattern.compile("[1-9]+\\.0\\.0\\.GA");
+
+    private static final String PATCH_STREAM_BASE_NAME = "jboss-eap-xp-";
+
+    private static final String APPLIES_TO_VERSON_MARKER = "${applies.to.version}";
+    private static final String EXPANSION_PACK_VERSION_MARKER = "${expansion.pack.version}";
+    private static final String EXPANSION_PACK_PATCH_STREAM_NAME_MARKER = "${xp.patch.stream.name}";
 
     private final String appliesToVersion;
     private final String xpVersionRoot;
+    private final String patchStreamName;
     private final String outputDir;
 
-    private ConfigCreator(String appliesToVersion, String xpVersionRoot, String outputDir) {
+    private ConfigCreator(String appliesToVersion, String xpVersionRoot, String patchStreamName, String outputDir) {
         this.appliesToVersion = appliesToVersion;
         this.xpVersionRoot = xpVersionRoot;
+        this.patchStreamName = patchStreamName;
         this.outputDir = outputDir;
     }
 
@@ -91,7 +100,8 @@ class ConfigCreator {
 
 
         String appliesToVersion = "0.0.0";
-        if (!xpVersion.equals("1.0.0.GA")) {
+        if (!MAJOR_VERSION_PATTERN.matcher(xpVersion).matches()) {
+            // Figure out the last version
             String[] parts = xpVersion.split("\\.");
             StringBuilder xpVersionBuilder = new StringBuilder();
             StringBuilder appliesToVersionBuilder = new StringBuilder();
@@ -114,8 +124,11 @@ class ConfigCreator {
 
         int i = xpVersion.indexOf(".GA");
         String xpVersionRoot = xpVersion.substring(0, i);
+
+        String majorVersion = xpVersion.substring(0, xpVersion.indexOf("."));
+        String patchStreamName = PATCH_STREAM_BASE_NAME + majorVersion + ".0";
         
-        ConfigCreator configCreator = new ConfigCreator(appliesToVersion, xpVersionRoot, outputDir);
+        ConfigCreator configCreator = new ConfigCreator(appliesToVersion, xpVersionRoot, patchStreamName, outputDir);
         return configCreator.createPatchConfigXml();
     }
 
@@ -161,8 +174,9 @@ class ConfigCreator {
                         StringBuffer sb = new StringBuffer();
                         String line = reader.readLine();
                         while (line != null) {
-                            line = line.replace("${applies.to.version}", appliesToVersion);
-                            line = line.replace("${expansion.pack.version}", xpVersionRoot);
+                            line = line.replace(APPLIES_TO_VERSON_MARKER, appliesToVersion);
+                            line = line.replace(EXPANSION_PACK_VERSION_MARKER, xpVersionRoot);
+                            line = line.replace(EXPANSION_PACK_PATCH_STREAM_NAME_MARKER, patchStreamName);
                             sb.append(line);
                             sb.append("\n");
                             line = reader.readLine();
@@ -178,5 +192,9 @@ class ConfigCreator {
             throw new IllegalStateException("Could not find patch-config.xml");
         }
         return contents;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(MAJOR_VERSION_PATTERN.matcher("1.0.0.GA").matches());
     }
 }

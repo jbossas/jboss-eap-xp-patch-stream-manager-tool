@@ -24,7 +24,7 @@
         No description available
     </description>
     <cumulative
-            name="jboss-eap-xp-2.0"
+            name="${xp.patch.stream.name}"
             applies-to-version="${applies.to.version}"
             resulting-version="${expansion.pack.version}.GA"
             skip-non-configured-layers="true"
